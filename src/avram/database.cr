@@ -90,9 +90,7 @@ abstract class Avram::Database
     def {{ crystal_db_alias.id }}(query, *args_, args : Array? = nil, queryable : String? = nil, **named_args)
       publish_query_event(query, args_, args, queryable) do
         run do |db|
-          db.as(DB::Connection).retry do
-            db.{{ crystal_db_alias.id }}(query, *args_, **named_args, args: args)
-          end
+          db.{{ crystal_db_alias.id }}(query, *args_, **named_args, args: args)
         end
       end
     end
@@ -109,10 +107,8 @@ abstract class Avram::Database
     def {{ crystal_db_alias.id }}(query, *args_, args : Array? = nil, queryable : String? = nil, **named_args)
       publish_query_event(query, args_, args, queryable) do
         run do |db|
-          db.as(DB::Connection).retry do
-            db.{{ crystal_db_alias.id }}(query, *args_, args: args) do |*yield_args|
-              yield *yield_args
-            end
+          db.{{ crystal_db_alias.id }}(query, *args_, args: args) do |*yield_args|
+            yield *yield_args
           end
         end
       end
@@ -188,12 +184,14 @@ abstract class Avram::Database
     connections[key] ||= db.checkout
     connection = connections[key]
 
-    begin
-      yield connection
-    ensure
-      if !connection._avram_in_transaction?
-        connection.release
-        connections.delete(key)
+    db.retry do
+      begin
+        yield connection
+      ensure
+        if !connection._avram_in_transaction?
+          connection.release
+          connections.delete(key)
+        end
       end
     end
   end
