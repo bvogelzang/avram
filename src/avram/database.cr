@@ -198,15 +198,6 @@ abstract class Avram::Database
             end
           end
         end
-      # rescue e : DB::PoolRetryAttemptsExceeded
-      #   db.using_connection do |new_conn|
-      #     begin
-      #       connections[key] = new_conn
-      #       yield new_conn
-      #     ensure
-      #       connections.delete(key)
-      #     end
-      #   end
       end
     ensure
       if !connection._avram_in_transaction?
