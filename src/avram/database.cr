@@ -186,10 +186,26 @@ abstract class Avram::Database
 
     begin
       db.retry do
-        if connection.closed?
-          raise DB::ConnectionLost.new(connection)
-        else
+        if connection && !connection.closed?
           yield connection
+        else
+          db.using_connection do |new_conn|
+            begin
+              connections[key] = new_conn
+              yield new_conn
+            ensure
+              connections.delete(key)
+            end
+          end
+        end
+      rescue e : DB::PoolRetryAttemptsExceeded
+        db.using_connection do |new_conn|
+          begin
+            connections[key] = new_conn
+            yield new_conn
+          ensure
+            connections.delete(key)
+          end
         end
       end
     ensure
