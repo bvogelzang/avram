@@ -154,13 +154,7 @@ abstract class Avram::Database
   # :nodoc:
   def run(&)
     with_connection do |conn|
-      conn.retry do
-        if conn.closed?
-          raise DB::ConnectionLost.new(conn)
-        else
-          yield conn
-        end
-      end
+      yield conn
     end
   end
 
@@ -191,7 +185,13 @@ abstract class Avram::Database
     connection = connections[key]
 
     begin
-      yield connection
+      connection.retry do
+        if connection.closed?
+          raise DB::ConnectionLost.new(connection)
+        else
+          yield connection
+        end
+      end
     ensure
       if !connection._avram_in_transaction?
         connection.release
