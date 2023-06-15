@@ -181,16 +181,13 @@ abstract class Avram::Database
   # once the block is finished
   private def with_connection(&)
     key = object_id
-    connections[key] ||= db.checkout
+    my_db = db
+    connections[key] ||= my_db.checkout
     connection = connections[key]
 
     begin
-      connection.as(DB::Database).retry do
-        if connection.closed?
-          raise DB::ConnectionLost.new(connection)
-        else
-          yield connection
-        end
+      my_db.retry do
+        yield connection
       end
     ensure
       if !connection._avram_in_transaction?
