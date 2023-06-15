@@ -185,7 +185,7 @@ abstract class Avram::Database
     connection = connections[key]
 
     begin
-      db.retry do
+      connection.as(DB::Database).retry do
         if connection.closed?
           raise DB::ConnectionLost.new(connection)
         else
