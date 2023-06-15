@@ -90,7 +90,9 @@ abstract class Avram::Database
     def {{ crystal_db_alias.id }}(query, *args_, args : Array? = nil, queryable : String? = nil, **named_args)
       publish_query_event(query, args_, args, queryable) do
         run do |db|
-          db.{{ crystal_db_alias.id }}(query, *args_, **named_args, args: args)
+          db.retry do
+            db.{{ crystal_db_alias.id }}(query, *args_, **named_args, args: args)
+          end
         end
       end
     end
@@ -107,8 +109,10 @@ abstract class Avram::Database
     def {{ crystal_db_alias.id }}(query, *args_, args : Array? = nil, queryable : String? = nil, **named_args)
       publish_query_event(query, args_, args, queryable) do
         run do |db|
-          db.{{ crystal_db_alias.id }}(query, *args_, args: args) do |*yield_args|
-            yield *yield_args
+          db.retry do
+            db.{{ crystal_db_alias.id }}(query, *args_, args: args) do |*yield_args|
+              yield *yield_args
+            end
           end
         end
       end
