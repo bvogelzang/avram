@@ -186,7 +186,7 @@ abstract class Avram::Database
 
     begin
       db.retry do
-        if connection && !connection.closed?
+        if connection
           yield connection
         else
           db.using_connection do |new_conn|
